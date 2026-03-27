@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Powered Demand Gen: Escape the Manual Work Trap | Live Webinar</title>
+  <meta name="description" content="Learn how AI is revolutionizing demand generation and discover practical ways to automate manual tasks that are burning out marketing teams.">
+  <meta property="og:title" content="AI-Powered Demand Gen: Escape the Manual Work Trap">
+  <meta property="og:description" content="Learn how AI is revolutionizing demand generation and discover practical ways to automate manual tasks that are burning out marketing teams.">
+  <meta property="og:type" content="website">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f7; color: #1a1a2e; }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #6c63ff 0%, #4834d4 100%);
+      padding: 64px 24px 80px;
+      text-align: center;
+    }
+    .hero .tag {
+      display: inline-block;
+      color: rgba(255,255,255,0.9);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.15);
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      color: #fff;
+      font-size: 40px;
+      line-height: 1.15;
+      max-width: 640px;
+      margin: 0 auto 20px;
+      font-weight: 700;
+    }
+    .hero .meta {
+      color: rgba(255,255,255,0.9);
+      font-size: 17px;
+      font-weight: 400;
+    }
+    .hero .meta strong { font-weight: 600; }
+
+    /* Card */
+    .container { max-width: 720px; margin: -48px auto 48px; padding: 0 16px; }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    /* Content */
+    .content { padding: 36px 32px; }
+    .content > p { font-size: 17px; line-height: 1.75; color: #374151; margin-bottom: 24px; }
+
+    /* Takeaways */
+    .takeaways {
+      background: #f8f7ff;
+      border-left: 4px solid #6c63ff;
+      padding: 24px 28px;
+      margin: 28px 0;
+      border-radius: 0 12px 12px 0;
+    }
+    .takeaways h3 { font-size: 17px; margin-bottom: 12px; color: #1a1a2e; }
+    .takeaways ul { padding-left: 20px; color: #374151; }
+    .takeaways li { margin-bottom: 10px; line-height: 1.65; font-size: 15px; }
+
+    /* Pain Point */
+    .pain {
+      background: #fef3cd;
+      border-left: 4px solid #f59e0b;
+      padding: 18px 24px;
+      margin: 28px 0;
+      border-radius: 0 12px 12px 0;
+    }
+    .pain p { color: #92400e; font-size: 15px; line-height: 1.6; margin: 0; }
+
+    /* Speaker */
+    .speaker {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      background: #f9fafb;
+      border-radius: 12px;
+      margin: 28px 0 0;
+    }
+    .speaker-avatar {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #6c63ff, #4834d4);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 18px;
+      flex-shrink: 0;
+    }
+    .speaker .name { font-weight: 600; font-size: 15px; }
+    .speaker .role { color: #6b7280; font-size: 13px; margin-top: 2px; }
+
+    /* Form Section */
+    .form-section {
+      padding: 36px 32px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+    .form-section h3 {
+      font-size: 22px;
+      margin-bottom: 6px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .form-section .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    /* HubSpot form overrides */
+    .hs-custom-form .hs-form-field { margin-bottom: 12px; }
+    .hs-custom-form input[type="text"],
+    .hs-custom-form input[type="email"] {
+      width: 100% !important;
+      padding: 12px 16px !important;
+      border: 2px solid #e5e7eb !important;
+      border-radius: 8px !important;
+      font-size: 15px !important;
+      outline: none !important;
+      transition: border-color 0.2s !important;
+      font-family: inherit !important;
+    }
+    .hs-custom-form input:focus {
+      border-color: #6c63ff !important;
+    }
+    .hs-custom-form .hs-submit {
+      margin-top: 8px;
+    }
+    .hs-custom-form input[type="submit"],
+    .hs-custom-form .hs-button,
+    .hs-custom-form .hs-button.primary,
+    #hubspot-form input[type="submit"],
+    #hubspot-form .hs-button {
+      width: 100% !important;
+      background: linear-gradient(135deg, #6c63ff, #4834d4) !important;
+      background-color: #6c63ff !important;
+      color: #fff !important;
+      padding: 14px 28px !important;
+      border: none !important;
+      border-radius: 8px !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      font-family: inherit !important;
+      -webkit-appearance: none !important;
+    }
+    .hs-custom-form label {
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      color: #374151 !important;
+      margin-bottom: 4px !important;
+      display: block !important;
+    }
+
+    /* Fallback form */
+    .fallback-form { display: flex; flex-direction: column; gap: 12px; }
+    .fallback-form input {
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .fallback-form input:focus { border-color: #6c63ff; }
+    .fallback-form button {
+      background: linear-gradient(135deg, #6c63ff, #4834d4);
+      color: #fff;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 28px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .hero { padding: 44px 16px 64px; }
+      .hero h1 { font-size: 28px; }
+      .content, .form-section { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <span class="tag">Live Webinar</span>
+    <h1>AI-Powered Demand Gen: Escape the Manual Work Trap</h1>
+    <p class="meta"><strong>June 15, 2024</strong> at <strong>1:00 PM ET</strong> &middot; 45 minutes</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="content">
+        <p>Learn how AI is revolutionizing demand generation and discover practical ways to automate manual tasks that are burning out marketing teams.</p>
+
+        <div class="takeaways">
+          <h3>What you'll learn:</h3>
+          <ul>
+            <li>3 AI tools that can automate your most time-consuming demand gen tasks</li>
+            <li>How to build AI-powered lead scoring and nurture sequences</li>
+            <li>Real examples of marketers who cut manual work by 60%+ using AI</li>
+          </ul>
+        </div>
+
+        <div class="pain">
+          <p><strong>Sound familiar?</strong> Marketing teams drowning in repetitive manual tasks with no time for strategy</p>
+        </div>
+
+        <div class="speaker">
+          <div class="speaker-avatar">B</div>
+          <div>
+            <p class="name">Ben Bridger, Marketing Director at Acme Corporation</p>
+            <p class="role">Your host for this session</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Save Your Spot</h3>
+        <p class="subtitle">Free &middot; 45 minutes &middot; Live Q&A included</p>
+        
+        <div id="hubspot-form"></div>
+        <div id="thank-you" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="width:56px;height:56px;background:#10b981;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h3 style="color:#1a1a2e;font-size:22px;margin-bottom:8px;">You're registered!</h3>
+          <p style="color:#6b7280;font-size:15px;line-height:1.6;">Check your inbox for a calendar invite<br>with the webinar link.</p>
+        </div>
+        <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/embed/v2.js"></script>
+        <script>
+          hbspt.forms.create({
+            region: "na2",
+            portalId: "245132577",
+            formId: "3c1fbf45-6f63-47d0-ae51-1cd5336600e0",
+            target: "#hubspot-form",
+            css: "",
+            cssClass: "hs-custom-form",
+            onFormSubmit: function($form) {
+              // Capture form values before HubSpot clears them
+              var email = $form.find('input[name="email"]').val() || '';
+              var firstName = $form.find('input[name="firstname"]').val() || '';
+              var lastName = $form.find('input[name="lastname"]').val() || '';
+              // POST to our webhook to trigger confirmation email
+              var webhookUrl = "http://localhost:5001";
+              if (webhookUrl) {
+                fetch(webhookUrl + '/webhook/registration', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({
+                    email: email,
+                    first_name: firstName,
+                    last_name: lastName
+                  })
+                }).catch(function() {});
+              }
+            },
+            onFormSubmitted: function() {
+              document.getElementById('hubspot-form').style.display = 'none';
+              document.getElementById('thank-you').style.display = 'block';
+            }
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 Benny Bridger. All rights reserved.</p>
+  </div>
+</body>
+</html>
