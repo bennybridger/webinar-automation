@@ -1,62 +1,89 @@
 # Webinar Launch Automation Engine
 
-A CLI tool that takes a webinar brief and executes a full launch sequence: Zoom meeting creation, AI-generated segmented emails, automated sends via Brevo, and scheduled follow-ups — all from a single command.
+A full-stack automation system that takes a webinar idea — in plain English or JSON — and executes the entire launch: Zoom meeting, Google Calendar event, HubSpot landing page with registration form, AI-generated segmented emails, human review, automated sends via Brevo, confirmation emails with calendar invites, and scheduled follow-ups.
 
-Built to demonstrate how a Growth Marketing Engineer automates the repetitive parts of webinar execution while keeping human judgment in the loop for brand messaging.
+Two interfaces: a **CLI** for power users and a **conversational web agent** for marketers who just want to describe their webinar and hit go.
+
+## Live Demo Links
+
+- **Landing Page**: [bennybridger.github.io/webinar-automation](https://bennybridger.github.io/webinar-automation/landing-how-ai-is-changing-b2b-demand-gen-in-2026.html)
+- **Web Agent** (local): `http://localhost:5001`
+- **GitHub Repo**: [github.com/bennybridger/webinar-automation](https://github.com/bennybridger/webinar-automation)
 
 ## Architecture
 
 ```
-                    ┌─────────────────┐
-                    │  Webinar Brief   │
-                    │    (JSON)        │
-                    └────────┬────────┘
-                             │
-                    ┌────────▼────────┐
-                    │   main.py       │
-                    │   Orchestrator  │
-                    └────────┬────────┘
-                             │
-          ┌──────────────────┼──────────────────┐
-          │                  │                  │
-  ┌───────▼───────┐ ┌───────▼───────┐ ┌───────▼───────┐
-  │ Event Creator │ │   Content     │ │   Contact     │
-  │ (Zoom +       │ │   Generator   │ │   Manager     │
-  │  Google Cal)  │ │ (Claude API)  │ │ (Google       │
-  │               │ │               │ │  Sheets)      │
-  └───────────────┘ └───────┬───────┘ └───────┬───────┘
-                            │                  │
-                   ┌────────▼────────┐         │
-                   │  Human Approval │         │
-                   │  (CLI review)   │         │
-                   └────────┬────────┘         │
-                            │                  │
-                   ┌────────▼──────────────────▼┐
-                   │      Email Sender          │
-                   │      (Brevo API)           │
-                   └────────┬───────────────────┘
-                            │
-               ┌────────────┼────────────┐
-               │            │            │
-       ┌───────▼──┐  ┌─────▼─────┐ ┌────▼──────┐
-       │ Tracker  │  │ Follow-Up │ │ Campaign  │
-       │ (Send    │  │ Scheduler │ │ Log       │
-       │  Log)    │  │ (Sheets)  │ │ (Sheets)  │
-       └──────────┘  └───────────┘ └───────────┘
+                         ┌──────────────────────┐
+                         │   Input              │
+                         │   (Plain English or  │
+                         │    JSON brief)       │
+                         └──────────┬───────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │                               │
+            ┌───────▼───────┐               ┌───────▼───────┐
+            │   app.py      │               │   main.py     │
+            │   Web Agent   │               │   CLI         │
+            │   (Flask)     │               │   (argparse)  │
+            └───────┬───────┘               └───────┬───────┘
+                    │                               │
+                    └───────────────┬───────────────┘
+                                    │
+         ┌──────────┬───────────────┼───────────────┬──────────┐
+         │          │               │               │          │
+  ┌──────▼──────┐ ┌─▼───────────┐ ┌▼────────────┐ ┌▼────────┐ │
+  │ Event       │ │ Landing     │ │ Content     │ │ Contact │ │
+  │ Creator     │ │ Page        │ │ Generator   │ │ Manager │ │
+  │ (Zoom +     │ │ (HubSpot   │ │ (Claude AI) │ │ (Google │ │
+  │  Google Cal)│ │  Forms +   │ │             │ │  Sheets)│ │
+  │             │ │  HTML gen) │ │             │ │         │ │
+  └─────────────┘ └────────────┘ └──────┬──────┘ └────┬────┘ │
+                                        │              │      │
+                                ┌───────▼──────┐       │      │
+                                │ Human Review │       │      │
+                                │ (Preview     │       │      │
+                                │  links +     │       │      │
+                                │  approve)    │       │      │
+                                └───────┬──────┘       │      │
+                                        │              │      │
+                                ┌───────▼──────────────▼┐     │
+                                │    Email Sender       │     │
+                                │    (Brevo API)        │     │
+                                └───────┬───────────────┘     │
+                                        │                     │
+                  ┌─────────────────────┼─────────────────┐   │
+                  │                     │                 │   │
+          ┌───────▼──────┐     ┌────────▼──────┐  ┌──────▼───▼──┐
+          │ Confirmation │     │  Follow-Up    │  │  Tracker    │
+          │ Email +      │     │  Scheduler    │  │  (Campaign  │
+          │ Calendar     │     │  (Sheets)     │  │   + Send    │
+          │ Invite       │     │               │  │   Logs)     │
+          └──────────────┘     └───────────────┘  └─────────────┘
 ```
 
 ## What It Does
 
-1. **Creates a Zoom meeting** with a registration page and adds it to Google Calendar
-2. **Generates segmented emails** via Claude AI — different tone for customers vs. prospects
-3. **Shows you every email for approval** before anything sends (approve, edit subject, regenerate with feedback, or skip)
-4. **Sends personalized emails** through Brevo with HTML templates and first name/company personalization
-5. **Logs everything** to Google Sheets — campaign summaries, individual sends, and scheduled tasks
-6. **Schedules follow-ups** — reminder emails 3 days before, post-event follow-ups 1 day after
+1. **Creates a Zoom meeting** and adds it to Google Calendar
+2. **Builds a landing page** with a HubSpot registration form — hosted on GitHub Pages
+3. **Sends confirmation emails** with calendar invite + Zoom link when someone registers
+4. **Generates segmented emails** via Claude AI — different tone for customers vs. prospects
+5. **Pauses for human review** — preview each email via live links before approving the send
+6. **Sends personalized emails** through Brevo with HTML templates
+7. **Logs everything** to Google Sheets — campaigns, individual sends, scheduled tasks
+8. **Schedules follow-ups** — reminders 3 days before, post-event follow-ups 1 day after
+
+## APIs Integrated (6)
+
+| API | Purpose |
+|-----|---------|
+| **Zoom** | Server-to-Server OAuth — creates meetings programmatically |
+| **Google Calendar** | Service account — adds events with Zoom join link |
+| **Google Sheets** | Contact database, campaign logs, send tracking, follow-up scheduling |
+| **HubSpot** | Marketing Forms API (free tier) — registration forms that feed into CRM |
+| **Anthropic Claude** | Generates segmented email copy with different tone per audience |
+| **Brevo** | Transactional email delivery (300/day free tier) |
 
 ## How the Email Segmentation Works
-
-The system generates different emails for each audience:
 
 | Email Type | Customer Tone | Prospect Tone |
 |-----------|--------------|---------------|
@@ -64,74 +91,68 @@ The system generates different emails for each audience:
 | **Reminder** | Shared — friendly urgency | Shared — friendly urgency |
 | **Follow-up** | Deeper engagement CTA (strategy call, beta) | Conversion CTA (demo, free trial) |
 
-## Setup (Step by Step)
+## Registration Flow
+
+```
+Invite email → Landing page (HubSpot form) → Thank-you confirmation
+    → Confirmation email with Zoom link + "Add to Calendar" button
+    → Reminder email 3 days before (Zoom join link)
+    → Post-event follow-up email 1 day after
+```
+
+## Two Interfaces
+
+### 1. Web Agent (Conversational)
+
+```bash
+python3 app.py
+# Open http://localhost:5001
+```
+
+Describe your webinar in plain English. The agent extracts a structured brief, confirms it with you, then runs the full pipeline. Emails pause for your review before sending.
+
+### 2. CLI (JSON Brief)
+
+```bash
+# Full pipeline
+python main.py launch --brief sample_brief.json
+
+# Dry run (no emails sent)
+python main.py launch --brief sample_brief.json --dry-run
+
+# Individual commands
+python main.py contacts --list
+python main.py contacts --segment customer
+python main.py event --create --brief sample_brief.json
+python main.py generate --brief sample_brief.json --type invite
+python main.py landing --brief sample_brief.json
+python main.py status
+python main.py followup --check
+```
+
+## Setup
 
 ### Prerequisites
 
 - Python 3.9+
-- A Google Cloud project with Calendar API and Sheets API enabled
-- A Google service account with a JSON key file
-- A Brevo account (free tier — 300 emails/day)
-- A Zoom account with a Server-to-Server OAuth app
-- An Anthropic API key
+- Google Cloud project with Calendar API + Sheets API enabled
+- Google service account with JSON key
+- Brevo account (free tier — 300 emails/day)
+- Zoom Server-to-Server OAuth app
+- HubSpot account with private app (free tier)
+- Anthropic API key
 
-### 1. Clone the repo
+### Install
 
 ```bash
 git clone https://github.com/bennybridger/webinar-automation.git
 cd webinar-automation
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-### 3. Set up Google Cloud
-
-1. Create a project at [console.cloud.google.com](https://console.cloud.google.com)
-2. Enable **Google Calendar API** and **Google Sheets API**
-3. Create a **Service Account** (IAM > Service Accounts > Create)
-4. Download the JSON key file and save it in the project directory
-5. Copy the service account email (looks like `name@project.iam.gserviceaccount.com`)
-
-### 4. Set up Google Sheets
-
-1. Create a new Google Sheet
-2. Create 4 tabs: **Contacts**, **Campaign Log**, **Send Log**, **Scheduled Tasks**
-3. In the **Contacts** tab, add these column headers in row 1:
-   `email | first_name | last_name | company | segment`
-4. Add your contacts with segment as `customer` or `prospect`
-5. Share the sheet with your service account email (Editor access)
-
-### 5. Share your Google Calendar
-
-1. Go to Google Calendar > Settings > your calendar
-2. Share with specific people > Add your service account email
-3. Permission: **Make changes to events**
-
-### 6. Set up Zoom
-
-1. Go to [marketplace.zoom.us](https://marketplace.zoom.us) > Develop > Build App
-2. Choose **Server-to-Server OAuth**
-3. Add scope: `meeting:write`
-4. Copy Account ID, Client ID, and Client Secret
-5. Activate the app
-
-### 7. Set up Brevo
-
-1. Sign up at [brevo.com](https://brevo.com) (free tier)
-2. Go to Settings > API Keys > Generate a new key
-3. Verify your sender email in Settings > Senders & IP
-
-### 8. Configure environment
-
-```bash
 cp .env.example .env
+# Fill in all values in .env
 ```
 
-Fill in all values in `.env`:
+### Environment Variables
 
 ```
 BREVO_API_KEY=your-key
@@ -141,130 +162,48 @@ GOOGLE_CALENDAR_ID=your-email@gmail.com
 ZOOM_ACCOUNT_ID=your-zoom-account-id
 ZOOM_CLIENT_ID=your-zoom-client-id
 ZOOM_CLIENT_SECRET=your-zoom-client-secret
+HUBSPOT_ACCESS_TOKEN=pat-na2-xxxxx
 ANTHROPIC_API_KEY=sk-ant-xxxxx
 SENDER_EMAIL=your-verified-brevo-email
 SENDER_NAME=Your Name
 ```
 
-## Usage
+### Google Sheets Structure
 
-### Full Launch (the main command)
+Create a sheet with 4 tabs:
+- **Contacts**: `email | first_name | last_name | company | segment` (segment = `customer` or `prospect`)
+- **Campaign Log**: auto-populated by the pipeline
+- **Send Log**: auto-populated by the pipeline
+- **Scheduled Tasks**: auto-populated for follow-ups
 
-```bash
-python main.py launch --brief sample_brief.json
-```
+Share the sheet with your service account email (Editor access).
 
-This runs the entire pipeline: Zoom meeting → calendar event → AI email generation → human approval → send → log → schedule follow-ups.
-
-Add `--dry-run` to test without sending:
-
-```bash
-python main.py launch --brief sample_brief.json --dry-run
-```
-
-### Individual Commands
-
-```bash
-# List all contacts
-python main.py contacts --list
-
-# List only customers
-python main.py contacts --segment customer
-
-# Create a calendar event from a brief
-python main.py event --create --brief sample_brief.json
-
-# Generate invite emails
-python main.py generate --brief sample_brief.json --type invite
-
-# Check campaign history and send counts
-python main.py status
-
-# Execute any due follow-up emails
-python main.py followup --check
-```
-
-### Webinar Brief Format
-
-Create a JSON file with your webinar details:
-
-```json
-{
-  "title": "Your Webinar Title",
-  "speaker": "Speaker Name, Title",
-  "date": "2026-04-15",
-  "time": "1:00 PM ET",
-  "duration_minutes": 45,
-  "description": "What the webinar covers.",
-  "key_takeaways": [
-    "Takeaway 1",
-    "Takeaway 2",
-    "Takeaway 3"
-  ],
-  "target_pain_point": "The problem your audience faces.",
-  "cta_customers": "CTA text for existing customers",
-  "cta_prospects": "CTA text for prospects"
-}
-```
-
-## What Each Module Does
+## Project Structure
 
 | File | Purpose |
 |------|---------|
-| `main.py` | CLI entry point + full pipeline orchestrator with human approval loop |
+| `app.py` | Flask web agent — conversational interface + pipeline with human review |
+| `main.py` | CLI entry point + pipeline orchestrator with approval loop |
 | `config.py` | Loads and validates all environment variables from `.env` |
+| `modules/brief_agent.py` | Conversational AI that turns plain English into structured briefs |
 | `modules/contact_manager.py` | Reads contacts from Google Sheets, segments by customer/prospect |
-| `modules/event_creator.py` | Creates Zoom meeting with registration + Google Calendar event |
+| `modules/event_creator.py` | Creates Zoom meeting + Google Calendar event |
+| `modules/landing_page.py` | Creates HubSpot forms, generates HTML landing pages, sends confirmation emails |
 | `modules/content_generator.py` | Calls Claude API to generate segmented email copy |
 | `modules/email_sender.py` | Sends emails via Brevo API with Jinja2 HTML templates |
 | `modules/tracker.py` | Logs campaigns and sends to Google Sheets |
-| `modules/follow_up.py` | Schedules and executes reminder + post-event follow-up emails |
-| `templates/*.html` | HTML email templates with personalization tokens |
-
-## Example Output
-
-```
-============================================================
-  WEBINAR LAUNCH AUTOMATION ENGINE
-============================================================
-
-  Campaign: How AI is Changing B2B Demand Gen in 2026
-  Date:     2026-04-15 at 1:00 PM ET
-
-  STEP 1: Creating event
-  [SUCCESS] Zoom meeting created!
-    Registration: https://zoom.us/meeting/register/...
-  [SUCCESS] Calendar event created!
-
-  STEP 2: Loading contacts
-  Customers: 2 valid    Prospects: 2 valid
-
-  STEP 3: Generating email content via Claude
-  STEP 4: Review & approve emails
-  STEP 5: Sending emails
-  [SENT] Sarah Chen <sarah@acme.com> — ID: <abc123>
-  [SENT] Mike Johnson <mike@beta.com> — ID: <def456>
-
-  STEP 6: Scheduling follow-ups
-  [SCHEDULED] Reminder emails for 2026-04-12
-  [SCHEDULED] Follow-up emails for 2026-04-16
-
-  LAUNCH SUMMARY
-  Emails sent: 4    Failed: 0
-============================================================
-```
-
-## Rate Limits
-
-- **Brevo free tier**: 300 emails/day. The system tracks sends in Google Sheets and warns you before hitting the limit.
-- **Claude API**: Standard rate limits apply. Email generation uses Claude Sonnet for cost efficiency (~$0.001 per campaign).
+| `modules/follow_up.py` | Schedules and executes reminder + follow-up emails |
+| `templates/*.html` | HTML email templates (invite, reminder, follow-up, confirmation) |
+| `docs/` | GitHub Pages — hosted landing pages |
 
 ## Built With
 
-- Python 3 + argparse (CLI)
-- Anthropic Claude API (email content generation)
-- Brevo REST API (transactional email)
-- Google Sheets API via gspread (contact database + logging)
+- Python 3 + Flask (web agent) + argparse (CLI)
+- Anthropic Claude API (email content generation + conversational agent)
+- Zoom Server-to-Server OAuth API (meeting creation)
 - Google Calendar API (event creation)
-- Zoom API (meeting creation with registration)
+- Google Sheets API via gspread (contacts + logging)
+- HubSpot Marketing Forms API (registration forms → CRM)
+- Brevo REST API (transactional email)
 - Jinja2 (HTML email templating)
+- GitHub Pages (landing page hosting)
