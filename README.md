@@ -6,7 +6,8 @@ Two interfaces: a **CLI** for power users and a **conversational web agent** for
 
 ## Live Demo Links
 
-- **Landing Page**: [bennybridger.github.io/webinar-automation](https://bennybridger.github.io/webinar-automation/landing-how-ai-is-changing-b2b-demand-gen-in-2026.html)
+- **Landing Page** (try it — register and get a real confirmation email): [bennybridger.github.io/webinar-automation](https://bennybridger.github.io/webinar-automation/landing-how-ai-is-changing-b2b-demand-gen-in-2026.html)
+- **Webhook API** (deployed on Railway): [webinar-webhook-production.up.railway.app](https://webinar-webhook-production.up.railway.app)
 - **Web Agent** (local): `http://localhost:5001`
 - **GitHub Repo**: [github.com/bennybridger/webinar-automation](https://github.com/bennybridger/webinar-automation)
 
@@ -71,6 +72,18 @@ Two interfaces: a **CLI** for power users and a **conversational web agent** for
 6. **Sends personalized emails** through Brevo with HTML templates
 7. **Logs everything** to Google Sheets — campaigns, individual sends, scheduled tasks
 8. **Schedules follow-ups** — reminders 3 days before, post-event follow-ups 1 day after
+
+## Deployment
+
+The registration webhook is deployed to **Railway** (free tier) so the GitHub Pages landing pages can trigger confirmation emails for anyone who registers — no localhost required.
+
+| Component | Hosting | URL |
+|-----------|---------|-----|
+| Landing pages | GitHub Pages | `bennybridger.github.io/webinar-automation/` |
+| Registration webhook | Railway | `webinar-webhook-production.up.railway.app` |
+| Web agent | Local (Flask) | `localhost:5001` |
+
+The `webhook/` directory contains a self-contained Flask app with just the registration endpoint + Brevo email sending. It reads webinar details from a `BRIEF_JSON` environment variable on Railway.
 
 ## APIs Integrated (6)
 
@@ -194,7 +207,8 @@ Share the sheet with your service account email (Editor access).
 | `modules/tracker.py` | Logs campaigns and sends to Google Sheets |
 | `modules/follow_up.py` | Schedules and executes reminder + follow-up emails |
 | `templates/*.html` | HTML email templates (invite, reminder, follow-up, confirmation) |
-| `docs/` | GitHub Pages — hosted landing pages |
+| `webhook/` | Standalone webhook server deployed to Railway for registration emails |
+| `docs/` | GitHub Pages — hosted landing pages + email previews |
 
 ## Built With
 
@@ -207,3 +221,4 @@ Share the sheet with your service account email (Editor access).
 - Brevo REST API (transactional email)
 - Jinja2 (HTML email templating)
 - GitHub Pages (landing page hosting)
+- Railway (webhook deployment)
