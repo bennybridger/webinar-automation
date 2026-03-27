@@ -59,11 +59,18 @@ def _build_gcal_link(webinar_info):
     fmt = "%Y%m%dT%H%M%S"
     dates = f"{start_dt.strftime(fmt)}/{end_dt.strftime(fmt)}"
 
+    # Include Zoom link in calendar event details
+    zoom_url = webinar_info.get("zoom_join_url", "")
+    details = description
+    if zoom_url:
+        details = f"Join link: {zoom_url}\n\n{description}"
+
     params = {
         "action": "TEMPLATE",
         "text": title,
         "dates": dates,
-        "details": description,
+        "details": details,
+        "location": zoom_url,
     }
 
     query = "&".join(f"{k}={quote(str(v), safe='/')}" for k, v in params.items())
