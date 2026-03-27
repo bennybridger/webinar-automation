@@ -15,7 +15,13 @@
         <strong>Duration:</strong> {{ duration }} minutes<br>
         <strong>Speaker:</strong> {{ speaker }}
       </p>
-      <p>We'll send you the live webinar link before the event. In the meantime, add it to your calendar so you don't miss it.</p>
+      {% if webinar_link %}
+      <p style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <strong>Join link:</strong> <a href="{{ webinar_link }}" style="color: #6c63ff;">{{ webinar_link }}</a><br>
+        <span style="color: #6b7280; font-size: 13px;">Bookmark this — you'll use it to join on the day of the webinar.</span>
+      </p>
+      {% endif %}
+      <p>Add it to your calendar so you don't miss it:</p>
     </div>
     <div style="text-align: center; margin: 32px 0;">
       <a href="{{ gcal_link }}" style="background-color: #6c63ff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block;">

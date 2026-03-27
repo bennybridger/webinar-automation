@@ -95,6 +95,9 @@ def send_confirmation_email(to_email, to_name, webinar_info):
     except (ValueError, TypeError):
         nice_date = raw_date
 
+    # Zoom join link from the brief
+    webinar_link = webinar_info.get("zoom_join_url", "") or webinar_info.get("event_link", "")
+
     html = template.render(
         first_name=to_name.split()[0] if to_name else "there",
         webinar_title=webinar_info.get("title", "Webinar"),
@@ -102,6 +105,7 @@ def send_confirmation_email(to_email, to_name, webinar_info):
         webinar_time=webinar_info.get("time", ""),
         duration=webinar_info.get("duration_minutes", 45),
         speaker=webinar_info.get("speaker", ""),
+        webinar_link=webinar_link,
         gcal_link=gcal_link,
         sender_name=SENDER_NAME,
     )
