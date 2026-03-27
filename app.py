@@ -405,7 +405,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           if (data.status === 'running') {
             pipelineStatus.textContent = data.step || 'Running...';
             if (data.log && data.log.length > 0) {
-              // Update or create pipeline log message
               let logEl = document.getElementById('pipeline-log');
               if (!logEl) {
                 logEl = document.createElement('div');
@@ -417,9 +416,42 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               chat.scrollTop = chat.scrollHeight;
             }
             setTimeout(poll, 1000);
+          } else if (data.status === 'awaiting_approval') {
+            pipelineBar.classList.remove('active');
+            // Update log
+            if (data.log && data.log.length > 0) {
+              let logEl = document.getElementById('pipeline-log');
+              if (!logEl) {
+                logEl = document.createElement('div');
+                logEl.className = 'message system pipeline';
+                logEl.id = 'pipeline-log';
+                chat.appendChild(logEl);
+              }
+              logEl.textContent = data.log.join('\\n');
+            }
+            // Show preview links as clickable cards
+            if (data.previews && data.previews.length > 0 && !document.getElementById('preview-cards')) {
+              var cardHtml = '<div id="preview-cards" style="margin-top:8px;">' +
+                '<p style="font-weight:600;margin-bottom:12px;">Review your emails before sending:</p>';
+              data.previews.forEach(function(p) {
+                cardHtml += '<a href="' + p.url + '" target="_blank" style="display:block;background:#f8f7ff;border:2px solid #6c63ff;border-radius:10px;padding:14px 18px;margin-bottom:8px;text-decoration:none;color:#1a1a2e;transition:background 0.2s;"' +
+                  ' onmouseover="this.style.background=\'#ede9fe\'" onmouseout="this.style.background=\'#f8f7ff\'">' +
+                  '<strong style="color:#6c63ff;">' + p.label + '</strong><br>' +
+                  '<span style="font-size:13px;color:#6b7280;">Subject: ' + p.subject + '</span>' +
+                  '</a>';
+              });
+              cardHtml += '<p style="margin-top:12px;font-size:14px;color:#6b7280;">Click each to preview in a new tab. Type <strong style="color:#6c63ff;">send</strong> when ready.</p></div>';
+              var cardDiv = document.createElement('div');
+              cardDiv.className = 'message agent';
+              cardDiv.innerHTML = cardHtml;
+              chat.appendChild(cardDiv);
+              chat.scrollTop = chat.scrollHeight;
+            }
+            setInputEnabled(true);
+            // Keep polling in case user approves
+            setTimeout(poll, 2000);
           } else if (data.status === 'complete') {
             pipelineBar.classList.remove('active');
-            // Show final results
             if (data.summary) {
               addMessage(data.summary, 'agent');
             }
@@ -429,7 +461,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             addMessage('Pipeline error: ' + (data.error || 'Unknown error'), 'system error');
             setInputEnabled(true);
           } else {
-            // Not started yet
             setTimeout(poll, 1000);
           }
         } catch (err) {
@@ -465,6 +496,21 @@ def chat_endpoint():
 
     # Get or create session
     session_id = "default"  # Simple single-session for demo
+
+    # Check if user is approving email send
+    status = pipeline_status.get(session_id, {})
+    if status.get("status") == "awaiting_approval":
+        approve_words = {"send", "approve", "go", "yes", "confirmed", "looks good", "lgtm", "ship it"}
+        if user_message.lower().strip().rstrip("!.") in approve_words or "send" in user_message.lower():
+            # Resume pipeline — send the emails
+            pipeline_status[session_id]["status"] = "running"
+            pipeline_status[session_id]["step"] = "Sending emails..."
+            thread = threading.Thread(target=resume_send_emails, args=(session_id,))
+            thread.daemon = True
+            thread.start()
+            return jsonify({"response": "Sending emails now...", "launching": True})
+        else:
+            return jsonify({"response": "Pipeline is paused for review. Type **send** when you're ready to send the emails, or describe changes you'd like.", "launching": False})
     if session_id not in sessions:
         sessions[session_id] = []
 
@@ -555,6 +601,17 @@ def registration_webhook():
     return resp
 
 
+@app.route("/preview/<filename>")
+def serve_preview(filename):
+    """Serve email preview HTML files from the output directory."""
+    preview_dir = os.path.join(os.path.dirname(__file__), "output")
+    filepath = os.path.join(preview_dir, filename)
+    if not os.path.exists(filepath):
+        return "Preview not found", 404
+    with open(filepath) as f:
+        return Response(f.read(), mimetype="text/html")
+
+
 @app.route("/reset", methods=["POST"])
 def reset():
     session_id = "default"
@@ -643,18 +700,96 @@ def run_pipeline_async(session_id, brief):
                 emails["invite_prospect"] = content
                 update("Emails generated", f'✓ Prospect invite: "{content["subject"]}"')
 
-        # Step 5: Send emails
-        # Registration link = landing page (form) — invite email CTAs point here
-        # Webinar link = Zoom join URL — reminder/follow-up emails point here
+        # Step 5: Render email previews for human review
         registration_link = landing_url if landing_url and not landing_url.startswith("file://") else ""
         webinar_link = zoom_url or brief.get("event_link", "")
-        update("Links ready", f"  Registration: {registration_link or 'N/A'}")
-        update("Links ready", f"  Zoom join: {webinar_link or 'N/A'}")
         extra_vars = {
             "webinar_link": webinar_link,
             "registration_link": registration_link,
         }
 
+        update("Rendering previews...", "→ Rendering email previews for review...")
+        from modules.email_sender import render_email_html
+
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_dir, exist_ok=True)
+
+        previews = []
+        sample_customer = customers[0] if customers else {"first_name": "Customer", "last_name": "Demo", "company": "Acme Corp", "email": "demo@example.com"}
+        sample_prospect = prospects[0] if prospects else {"first_name": "Prospect", "last_name": "Demo", "company": "Demo Inc", "email": "demo@example.com"}
+
+        if "invite_customer" in emails:
+            html = render_email_html("invite_customer.html", emails["invite_customer"], sample_customer, extra_vars)
+            fname = "preview-invite-customer.html"
+            with open(os.path.join(output_dir, fname), "w") as f:
+                f.write(html)
+            previews.append({"label": "Customer invite", "url": f"/preview/{fname}", "subject": emails["invite_customer"]["subject"]})
+            update("Preview ready", f'✓ Customer invite preview ready: "{emails["invite_customer"]["subject"]}"')
+
+        if "invite_prospect" in emails:
+            html = render_email_html("invite_prospect.html", emails["invite_prospect"], sample_prospect, extra_vars)
+            fname = "preview-invite-prospect.html"
+            with open(os.path.join(output_dir, fname), "w") as f:
+                f.write(html)
+            previews.append({"label": "Prospect invite", "url": f"/preview/{fname}", "subject": emails["invite_prospect"]["subject"]})
+            update("Preview ready", f'✓ Prospect invite preview ready: "{emails["invite_prospect"]["subject"]}"')
+
+        update("Review emails", "")
+        update("Review emails", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        update("Review emails", "⏸ PAUSED — Review the email previews below")
+        update("Review emails", f"  Customers: {len(customers)} | Prospects: {len(prospects)}")
+        update("Review emails", '  Type "send" to approve and send')
+
+        # Save brief for follow-ups
+        brief_path = os.path.join(os.path.dirname(__file__), "output", "last_brief.json")
+        with open(brief_path, "w") as f:
+            json.dump(brief, f, indent=2)
+
+        # Pause pipeline — store everything needed to resume
+        pipeline_status[session_id] = {
+            "status": "awaiting_approval",
+            "step": "Review emails",
+            "log": log[-20:],
+            "previews": previews,
+            # Stored for resume
+            "_emails": emails,
+            "_customers": customers,
+            "_prospects": prospects,
+            "_extra_vars": extra_vars,
+            "_brief": brief,
+            "_zoom_url": zoom_url,
+            "_landing_url": landing_url,
+            "_log": log,
+        }
+
+    except Exception as e:
+        update("Error", f"✗ Pipeline error: {str(e)}")
+        pipeline_status[session_id] = {
+            "status": "error",
+            "error": str(e),
+            "log": log,
+        }
+
+
+def resume_send_emails(session_id):
+    """Resume the pipeline after human approval — send emails, schedule follow-ups."""
+    stored = pipeline_status.get(session_id, {})
+    emails = stored.get("_emails", {})
+    customers = stored.get("_customers", [])
+    prospects = stored.get("_prospects", [])
+    extra_vars = stored.get("_extra_vars", {})
+    brief = stored.get("_brief", {})
+    zoom_url = stored.get("_zoom_url", "")
+    landing_url = stored.get("_landing_url", "")
+    log = stored.get("_log", [])
+
+    webinar_link = extra_vars.get("webinar_link", "")
+
+    def update(step, msg):
+        log.append(msg)
+        pipeline_status[session_id] = {"status": "running", "step": step, "log": log[-20:]}
+
+    try:
         total_sent = 0
         total_failed = 0
 
@@ -667,7 +802,6 @@ def run_pipeline_async(session_id, brief):
             total_failed += result["failed"]
             update("Sent", f"✓ Customer emails: {result['sent']} sent, {result['failed']} failed")
 
-            # Log
             from modules.tracker import log_campaign, log_sends_batch
             log_campaign(brief["title"], "invite", "customer", len(customers),
                         result["sent"], result["failed"], zoom_url=webinar_link)
@@ -687,16 +821,11 @@ def run_pipeline_async(session_id, brief):
                         result["sent"], result["failed"], zoom_url=webinar_link)
             log_sends_batch(brief["title"], result["results"])
 
-        # Step 6: Schedule follow-ups
+        # Schedule follow-ups
         update("Scheduling follow-ups...", "→ Scheduling follow-up emails...")
         from modules.follow_up import schedule_reminder, schedule_followup
 
-        # Save brief to temp file for follow-ups
         brief_path = os.path.join(os.path.dirname(__file__), "output", "last_brief.json")
-        os.makedirs(os.path.dirname(brief_path), exist_ok=True)
-        with open(brief_path, "w") as f:
-            json.dump(brief, f, indent=2)
-
         schedule_reminder(brief["title"], brief["date"], brief_path)
         schedule_followup(brief["title"], brief["date"], brief_path)
         update("Follow-ups scheduled", "✓ Reminder + follow-up emails scheduled")
@@ -711,24 +840,18 @@ def run_pipeline_async(session_id, brief):
 
 - **Zoom meeting**: {zoom_url or 'N/A'}
 - **Calendar event**: {brief.get('event_link', 'N/A')}
-- **Landing page**: Generated in output/ folder
+- **Landing page**: {landing_url or 'N/A'}
 - **Emails sent**: {total_sent} total ({len(customers)} customers, {len(prospects)} prospects)
 - **Failed**: {total_failed}
 - **Follow-ups**: Reminder scheduled 3 days before, follow-up 1 day after
 
-Everything is logged in your Google Sheet. Run `python3 main.py status` to see the full campaign history.
-
-Want to launch another webinar? Just describe it!"""
+Everything is logged in your Google Sheet. Want to launch another webinar?"""
 
         pipeline_status[session_id] = {"status": "complete", "summary": summary, "log": log}
 
     except Exception as e:
-        update("Error", f"✗ Pipeline error: {str(e)}")
-        pipeline_status[session_id] = {
-            "status": "error",
-            "error": str(e),
-            "log": log,
-        }
+        update("Error", f"✗ Send error: {str(e)}")
+        pipeline_status[session_id] = {"status": "error", "error": str(e), "log": log}
 
 
 if __name__ == "__main__":
