@@ -434,11 +434,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               var cardHtml = '<div id="preview-cards" style="margin-top:8px;">' +
                 '<p style="font-weight:600;margin-bottom:12px;">Review your emails before sending:</p>';
               data.previews.forEach(function(p) {
-                cardHtml += '<a href="' + p.url + '" target="_blank" style="display:block;background:#f8f7ff;border:2px solid #6c63ff;border-radius:10px;padding:14px 18px;margin-bottom:8px;text-decoration:none;color:#1a1a2e;transition:background 0.2s;"' +
-                  ' onmouseover="this.style.background=\'#ede9fe\'" onmouseout="this.style.background=\'#f8f7ff\'">' +
-                  '<strong style="color:#6c63ff;">' + p.label + '</strong><br>' +
-                  '<span style="font-size:13px;color:#6b7280;">Subject: ' + p.subject + '</span>' +
-                  '</a>';
+                var link = document.createElement('a');
+                link.href = p.url;
+                link.target = '_blank';
+                link.style.cssText = 'display:block;background:#f8f7ff;border:2px solid #6c63ff;border-radius:10px;padding:14px 18px;margin-bottom:8px;text-decoration:none;color:#1a1a2e;';
+                link.innerHTML = '<strong style="color:#6c63ff;">' + p.label + '</strong><br><span style="font-size:13px;color:#6b7280;">Subject: ' + p.subject + '</span>';
+                cardHtml += link.outerHTML;
               });
               cardHtml += '<p style="margin-top:12px;font-size:14px;color:#6b7280;">Click each to preview in a new tab. Type <strong style="color:#6c63ff;">send</strong> when ready.</p></div>';
               var cardDiv = document.createElement('div');
