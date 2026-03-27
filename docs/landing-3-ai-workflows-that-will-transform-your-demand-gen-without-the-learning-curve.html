@@ -140,9 +140,13 @@
       margin-top: 8px;
     }
     .hs-custom-form input[type="submit"],
-    .hs-custom-form .hs-button {
+    .hs-custom-form .hs-button,
+    .hs-custom-form .hs-button.primary,
+    #hubspot-form input[type="submit"],
+    #hubspot-form .hs-button {
       width: 100% !important;
       background: linear-gradient(135deg, #6c63ff, #4834d4) !important;
+      background-color: #6c63ff !important;
       color: #fff !important;
       padding: 14px 28px !important;
       border: none !important;
@@ -151,6 +155,7 @@
       font-weight: 600 !important;
       cursor: pointer !important;
       font-family: inherit !important;
+      -webkit-appearance: none !important;
     }
     .hs-custom-form label {
       font-size: 14px !important;
@@ -204,7 +209,7 @@
   <div class="hero">
     <span class="tag">Live Webinar</span>
     <h1>3 AI Workflows That Will Transform Your Demand Gen (Without the Learning Curve)</h1>
-    <p class="meta"><strong>2024-04-15</strong> at <strong>2:00 PM ET</strong> &middot; 45 minutes</p>
+    <p class="meta"><strong>April 15, 2024</strong> at <strong>2:00 PM ET</strong> &middot; 45 minutes</p>
   </div>
 
   <div class="container">
@@ -239,15 +244,26 @@
         <p class="subtitle">Free &middot; 45 minutes &middot; Live Q&A included</p>
         
         <div id="hubspot-form"></div>
+        <div id="thank-you" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="width:56px;height:56px;background:#10b981;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h3 style="color:#1a1a2e;font-size:22px;margin-bottom:8px;">You're registered!</h3>
+          <p style="color:#6b7280;font-size:15px;line-height:1.6;">Check your inbox for a calendar invite<br>with the webinar link.</p>
+        </div>
         <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/embed/v2.js"></script>
         <script>
           hbspt.forms.create({
             region: "na2",
             portalId: "245132577",
-            formId: "d3335450-8c9f-4162-89a1-04bb14a79505",
+            formId: "e3c499f8-9494-4060-815d-ebecaa68a0cc",
             target: "#hubspot-form",
             css: "",
-            cssClass: "hs-custom-form"
+            cssClass: "hs-custom-form",
+            onFormSubmitted: function() {
+              document.getElementById('hubspot-form').style.display = 'none';
+              document.getElementById('thank-you').style.display = 'block';
+            }
           });
         </script>
       </div>

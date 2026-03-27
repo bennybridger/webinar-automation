@@ -80,7 +80,7 @@ def _create_hubspot_form(webinar_info, zoom_join_url=""):
         "fieldGroups": [
             {"groupType": "default_group", "richTextType": "text", "fields": [field("firstname", "First Name", "single_line_text")]},
             {"groupType": "default_group", "richTextType": "text", "fields": [field("lastname", "Last Name", "single_line_text")]},
-            {"groupType": "default_group", "richTextType": "text", "fields": [field("email", "Work Email", "email")]},
+            {"groupType": "default_group", "richTextType": "text", "fields": [field("email", "Email", "email")]},
             {"groupType": "default_group", "richTextType": "text", "fields": [field("company", "Company", "single_line_text", False)]},
         ],
         "configuration": {
