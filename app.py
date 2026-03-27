@@ -434,11 +434,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               var cardHtml = '<div id="preview-cards" style="margin-top:8px;">' +
                 '<p style="font-weight:600;margin-bottom:12px;">Review your emails before sending:</p>';
               data.previews.forEach(function(p) {
+                var previewUrl = p.live_url || p.url;
                 var link = document.createElement('a');
-                link.href = p.url;
+                link.href = previewUrl;
                 link.target = '_blank';
                 link.style.cssText = 'display:block;background:#f8f7ff;border:2px solid #6c63ff;border-radius:10px;padding:14px 18px;margin-bottom:8px;text-decoration:none;color:#1a1a2e;';
-                link.innerHTML = '<strong style="color:#6c63ff;">' + p.label + '</strong><br><span style="font-size:13px;color:#6b7280;">Subject: ' + p.subject + '</span>';
+                link.innerHTML = '<strong style="color:#6c63ff;">' + p.label + '</strong><br><span style="font-size:13px;color:#6b7280;">Subject: ' + p.subject + '</span><br><span style="font-size:11px;color:#9ca3af;">Live link: ' + previewUrl + '</span>';
                 cardHtml += link.outerHTML;
               });
               cardHtml += '<p style="margin-top:12px;font-size:14px;color:#6b7280;">Click each to preview in a new tab. Type <strong style="color:#6c63ff;">send</strong> when ready.</p></div>';
@@ -711,9 +712,12 @@ def run_pipeline_async(session_id, brief):
 
         update("Rendering previews...", "→ Rendering email previews for review...")
         from modules.email_sender import render_email_html
+        import subprocess
 
         output_dir = os.path.join(os.path.dirname(__file__), "output")
+        docs_dir = os.path.join(os.path.dirname(__file__), "docs")
         os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(docs_dir, exist_ok=True)
 
         previews = []
         sample_customer = customers[0] if customers else {"first_name": "Customer", "last_name": "Demo", "company": "Acme Corp", "email": "demo@example.com"}
@@ -724,7 +728,10 @@ def run_pipeline_async(session_id, brief):
             fname = "preview-invite-customer.html"
             with open(os.path.join(output_dir, fname), "w") as f:
                 f.write(html)
-            previews.append({"label": "Customer invite", "url": f"/preview/{fname}", "subject": emails["invite_customer"]["subject"]})
+            with open(os.path.join(docs_dir, fname), "w") as f:
+                f.write(html)
+            live_url = f"https://bennybridger.github.io/webinar-automation/{fname}"
+            previews.append({"label": "Customer invite", "url": f"/preview/{fname}", "live_url": live_url, "subject": emails["invite_customer"]["subject"]})
             update("Preview ready", f'✓ Customer invite preview ready: "{emails["invite_customer"]["subject"]}"')
 
         if "invite_prospect" in emails:
@@ -732,8 +739,22 @@ def run_pipeline_async(session_id, brief):
             fname = "preview-invite-prospect.html"
             with open(os.path.join(output_dir, fname), "w") as f:
                 f.write(html)
-            previews.append({"label": "Prospect invite", "url": f"/preview/{fname}", "subject": emails["invite_prospect"]["subject"]})
+            with open(os.path.join(docs_dir, fname), "w") as f:
+                f.write(html)
+            live_url = f"https://bennybridger.github.io/webinar-automation/{fname}"
+            previews.append({"label": "Prospect invite", "url": f"/preview/{fname}", "live_url": live_url, "subject": emails["invite_prospect"]["subject"]})
             update("Preview ready", f'✓ Prospect invite preview ready: "{emails["invite_prospect"]["subject"]}"')
+
+        # Auto-push landing pages + previews to GitHub Pages
+        update("Publishing...", "→ Publishing landing pages + previews to GitHub Pages...")
+        try:
+            repo_dir = os.path.dirname(__file__)
+            subprocess.run(["git", "add", "docs/"], cwd=repo_dir, capture_output=True, timeout=10)
+            subprocess.run(["git", "commit", "-m", "Auto-publish landing pages + email previews"], cwd=repo_dir, capture_output=True, timeout=10)
+            subprocess.run(["git", "push", "origin", "main"], cwd=repo_dir, capture_output=True, timeout=30)
+            update("Published", "✓ Landing pages + previews pushed to GitHub Pages")
+        except Exception as e:
+            update("Publish warning", f"⚠ Could not auto-push to GitHub: {e}")
 
         update("Review emails", "")
         update("Review emails", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
