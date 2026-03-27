@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: webinar-webhook
+    runtime: python
+    rootDir: webhook
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn webhook_server:app --bind 0.0.0.0:$PORT
+    plan: free
+    envVars:
+      - key: BREVO_API_KEY
+        sync: false
+      - key: SENDER_EMAIL
+        sync: false
+      - key: SENDER_NAME
+        sync: false
+      - key: BRIEF_JSON
+        sync: false

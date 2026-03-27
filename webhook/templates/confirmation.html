@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background-color: #f4f4f7;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 32px 24px;">
+    <div style="border-bottom: 2px solid #6c63ff; padding-bottom: 16px; margin-bottom: 24px;">
+      <h2 style="color: #1a1a2e; margin: 0; font-size: 22px;">You're registered!</h2>
+    </div>
+    <div style="color: #374151; font-size: 15px; line-height: 1.6;">
+      <p>Hi {{ first_name }},</p>
+      <p>You're all set for <strong>{{ webinar_title }}</strong>.</p>
+      <p style="background: #f8f7ff; border-left: 4px solid #6c63ff; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <strong>Date:</strong> {{ webinar_date }}<br>
+        <strong>Time:</strong> {{ webinar_time }}<br>
+        <strong>Duration:</strong> {{ duration }} minutes<br>
+        <strong>Speaker:</strong> {{ speaker }}
+      </p>
+      {% if webinar_link %}
+      <p style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <strong>Join link:</strong> <a href="{{ webinar_link }}" style="color: #6c63ff;">{{ webinar_link }}</a><br>
+        <span style="color: #6b7280; font-size: 13px;">Bookmark this — you'll use it to join on the day of the webinar.</span>
+      </p>
+      {% endif %}
+      <p>Add it to your calendar so you don't miss it:</p>
+    </div>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="{{ gcal_link }}" style="background-color: #6c63ff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block;">
+        Add to Calendar
+      </a>
+    </div>
+    <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 32px; color: #9ca3af; font-size: 12px;">
+      <p>{{ sender_name }}</p>
+    </div>
+  </div>
+</body>
+</html>
