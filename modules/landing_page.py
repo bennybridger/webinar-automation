@@ -135,8 +135,14 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
 
     title = webinar_info["title"]
     speaker = webinar_info.get("speaker", "")
-    date = webinar_info.get("date", "")
+    raw_date = webinar_info.get("date", "")
     time = webinar_info.get("time", "")
+
+    # Format date as human-readable (e.g., "April 15, 2026")
+    try:
+        date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%B %d, %Y")
+    except (ValueError, TypeError):
+        date = raw_date
     duration = webinar_info.get("duration_minutes", 45)
     description = webinar_info.get("description", "")
     takeaways = webinar_info.get("key_takeaways", [])
@@ -315,9 +321,13 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
       margin-top: 8px;
     }}
     .hs-custom-form input[type="submit"],
-    .hs-custom-form .hs-button {{
+    .hs-custom-form .hs-button,
+    .hs-custom-form .hs-button.primary,
+    #hubspot-form input[type="submit"],
+    #hubspot-form .hs-button {{
       width: 100% !important;
       background: linear-gradient(135deg, #6c63ff, #4834d4) !important;
+      background-color: #6c63ff !important;
       color: #fff !important;
       padding: 14px 28px !important;
       border: none !important;
@@ -326,6 +336,7 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
       font-weight: 600 !important;
       cursor: pointer !important;
       font-family: inherit !important;
+      -webkit-appearance: none !important;
     }}
     .hs-custom-form label {{
       font-size: 14px !important;

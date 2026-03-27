@@ -124,11 +124,11 @@ def generate_email_content(template_type, segment, webinar_info):
     except json.JSONDecodeError:
         print(f"\n[ERROR] Claude returned invalid JSON. Raw response:\n{raw[:500]}")
         return None
-    except anthropic.APIError as e:
-        print(f"\n[ERROR] Claude API error: {e}")
-        return None
     except anthropic.RateLimitError:
         print("\n[ERROR] Claude API rate limited. Wait a moment and try again.")
+        return None
+    except anthropic.APIError as e:
+        print(f"\n[ERROR] Claude API error: {e}")
         return None
     except Exception as e:
         print(f"\n[ERROR] Unexpected error generating content: {e}")

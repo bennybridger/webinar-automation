@@ -364,7 +364,8 @@ Commands:
         from modules.landing_page import handle_landing_page_command
         handle_landing_page_command(args)
     elif args.command == "send":
-        print("[TODO] Standalone send not yet wired — use 'launch' for the full pipeline")
+        from modules.email_sender import handle_send_command
+        handle_send_command(args)
     elif args.command == "status":
         from modules.tracker import handle_status_command
         handle_status_command()

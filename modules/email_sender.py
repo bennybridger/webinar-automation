@@ -172,3 +172,9 @@ def send_batch(contacts, template_name, content, extra_vars=None, dry_run=False,
         })
 
     return {"sent": sent, "failed": failed, "errors": errors, "results": results}
+
+
+def handle_send_command(args):
+    """Handle the 'send' CLI subcommand."""
+    print("\nUse 'python main.py launch --brief path/to/brief.json' for the full pipeline.")
+    print("Or use 'python main.py launch --brief path/to/brief.json --dry-run' to preview without sending.")

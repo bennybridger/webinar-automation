@@ -140,9 +140,13 @@
       margin-top: 8px;
     }
     .hs-custom-form input[type="submit"],
-    .hs-custom-form .hs-button {
+    .hs-custom-form .hs-button,
+    .hs-custom-form .hs-button.primary,
+    #hubspot-form input[type="submit"],
+    #hubspot-form .hs-button {
       width: 100% !important;
       background: linear-gradient(135deg, #6c63ff, #4834d4) !important;
+      background-color: #6c63ff !important;
       color: #fff !important;
       padding: 14px 28px !important;
       border: none !important;
@@ -151,6 +155,7 @@
       font-weight: 600 !important;
       cursor: pointer !important;
       font-family: inherit !important;
+      -webkit-appearance: none !important;
     }
     .hs-custom-form label {
       font-size: 14px !important;
@@ -204,7 +209,7 @@
   <div class="hero">
     <span class="tag">Live Webinar</span>
     <h1>How AI is Changing B2B Demand Gen in 2026</h1>
-    <p class="meta"><strong>2026-04-15</strong> at <strong>1:00 PM ET</strong> &middot; 45 minutes</p>
+    <p class="meta"><strong>April 15, 2026</strong> at <strong>1:00 PM ET</strong> &middot; 45 minutes</p>
   </div>
 
   <div class="container">
@@ -244,7 +249,7 @@
           hbspt.forms.create({
             region: "na2",
             portalId: "245132577",
-            formId: "9266f8b1-5e05-44b2-8b76-56317a7d4daf",
+            formId: "72c3002e-7d1b-4f6b-9031-85839508ee21",
             target: "#hubspot-form",
             css: "",
             cssClass: "hs-custom-form"
