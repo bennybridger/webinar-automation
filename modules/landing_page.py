@@ -65,17 +65,12 @@ def _create_hubspot_form(webinar_info, zoom_join_url=""):
             },
         }
 
-    # Set redirect after form submission
-    if zoom_join_url:
-        post_submit = {
-            "type": "redirect_url",
-            "value": zoom_join_url,
-        }
-    else:
-        post_submit = {
-            "type": "thank_you",
-            "value": "You're registered! Check your email for the webinar link.",
-        }
+    # After form submission, show a thank you message (NOT a redirect to Zoom).
+    # The Zoom link is sent via email — invite emails for pre-event, reminder day-of.
+    post_submit = {
+        "type": "thank_you",
+        "value": "You're registered! Check your email for a calendar invite with the webinar link.",
+    }
 
     payload = {
         "name": f"Webinar Registration: {title}",
@@ -110,8 +105,7 @@ def _create_hubspot_form(webinar_info, zoom_join_url=""):
 
         print(f"  [SUCCESS] HubSpot form created (ID: {form_id})")
         print(f"  Registrations will appear in HubSpot CRM as contacts.")
-        if zoom_join_url:
-            print(f"  After registration, redirects to: {zoom_join_url}")
+        print(f"  After submission, shows thank-you confirmation (no redirect).")
 
         return {"form_id": form_id, "portal_id": portal_id}
 
@@ -156,6 +150,13 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
         form_id = form_data["form_id"]
         form_section = f"""
         <div id="hubspot-form"></div>
+        <div id="thank-you" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="width:56px;height:56px;background:#10b981;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h3 style="color:#1a1a2e;font-size:22px;margin-bottom:8px;">You're registered!</h3>
+          <p style="color:#6b7280;font-size:15px;line-height:1.6;">Check your inbox for a calendar invite<br>with the webinar link.</p>
+        </div>
         <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/embed/v2.js"></script>
         <script>
           hbspt.forms.create({{
@@ -164,7 +165,11 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
             formId: "{form_id}",
             target: "#hubspot-form",
             css: "",
-            cssClass: "hs-custom-form"
+            cssClass: "hs-custom-form",
+            onFormSubmitted: function() {{
+              document.getElementById('hubspot-form').style.display = 'none';
+              document.getElementById('thank-you').style.display = 'block';
+            }}
           }});
         </script>"""
     else:
@@ -470,16 +475,26 @@ def create_hubspot_landing_page(webinar_info, zoom_join_url=""):
     with open(filepath, "w") as f:
         f.write(html)
 
+    # Also copy to docs/ for GitHub Pages hosting
+    docs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs")
+    os.makedirs(docs_dir, exist_ok=True)
+    docs_filepath = os.path.join(docs_dir, filename)
+    with open(docs_filepath, "w") as f:
+        f.write(html)
+
+    # GitHub Pages URL (live public URL)
+    github_pages_url = f"https://bennybridger.github.io/webinar-automation/{filename}"
+
     print(f"\n[SUCCESS] Landing page created: {filepath}")
-    print(f"  → Open locally: file://{filepath}")
-    print(f"  → Host on GitHub Pages / Netlify / Vercel for a live URL")
+    print(f"  → Local preview: file://{filepath}")
+    print(f"  → GitHub Pages:  {github_pages_url}")
     if form_data:
         print(f"  → HubSpot form embedded — registrations flow into your CRM")
-        print(f"  → After registration, redirects to Zoom meeting")
+        print(f"  → After registration, shows thank-you confirmation")
 
     result = {
         "landing_page_file": filepath,
-        "landing_page_url": f"file://{filepath}",
+        "landing_page_url": github_pages_url,
         "source": "hubspot_form" if form_data else "standalone",
     }
     if form_data:

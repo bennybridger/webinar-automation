@@ -594,10 +594,12 @@ def run_pipeline_async(session_id, brief):
                 update("Emails generated", f'✓ Prospect invite: "{content["subject"]}"')
 
         # Step 5: Send emails
-        # Registration link = landing page (form) — email CTAs point here
-        # Webinar link = Zoom join URL — fallback if no landing page
+        # Registration link = landing page (form) — invite email CTAs point here
+        # Webinar link = Zoom join URL — reminder/follow-up emails point here
         registration_link = landing_url if landing_url and not landing_url.startswith("file://") else ""
         webinar_link = zoom_url or brief.get("event_link", "")
+        update("Links ready", f"  Registration: {registration_link or 'N/A'}")
+        update("Links ready", f"  Zoom join: {webinar_link or 'N/A'}")
         extra_vars = {
             "webinar_link": webinar_link,
             "registration_link": registration_link,

@@ -244,15 +244,26 @@
         <p class="subtitle">Free &middot; 45 minutes &middot; Live Q&A included</p>
         
         <div id="hubspot-form"></div>
+        <div id="thank-you" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="width:56px;height:56px;background:#10b981;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h3 style="color:#1a1a2e;font-size:22px;margin-bottom:8px;">You're registered!</h3>
+          <p style="color:#6b7280;font-size:15px;line-height:1.6;">Check your inbox for a calendar invite<br>with the webinar link.</p>
+        </div>
         <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/embed/v2.js"></script>
         <script>
           hbspt.forms.create({
             region: "na2",
             portalId: "245132577",
-            formId: "72c3002e-7d1b-4f6b-9031-85839508ee21",
+            formId: "7ddc719b-1be3-4391-8235-c4d2e689234f",
             target: "#hubspot-form",
             css: "",
-            cssClass: "hs-custom-form"
+            cssClass: "hs-custom-form",
+            onFormSubmitted: function() {
+              document.getElementById('hubspot-form').style.display = 'none';
+              document.getElementById('thank-you').style.display = 'block';
+            }
           });
         </script>
       </div>
