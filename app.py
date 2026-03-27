@@ -507,6 +507,54 @@ def pipeline_status_endpoint():
     return jsonify(status)
 
 
+@app.route("/webhook/registration", methods=["POST", "OPTIONS"])
+def registration_webhook():
+    """
+    Receive form submission data and send a confirmation email with calendar invite.
+    Called by the landing page JS after HubSpot form submission.
+    """
+    # Handle CORS preflight for cross-origin requests (GitHub Pages → localhost)
+    if request.method == "OPTIONS":
+        resp = app.make_default_options_response()
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        resp.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        return resp
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip()
+    first_name = (data.get("first_name") or "").strip()
+    last_name = (data.get("last_name") or "").strip()
+
+    if not email:
+        resp = jsonify({"error": "Missing email"})
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    name = f"{first_name} {last_name}".strip() or email
+
+    # Load the latest webinar brief for context
+    brief_path = os.path.join(os.path.dirname(__file__), "output", "last_brief.json")
+    try:
+        with open(brief_path) as f:
+            brief = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        resp = jsonify({"error": "No active webinar found"})
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 404
+
+    # Send confirmation email
+    from modules.landing_page import send_confirmation_email
+    result = send_confirmation_email(email, name, brief)
+
+    if result["success"]:
+        resp = jsonify({"ok": True, "message_id": result["message_id"]})
+    else:
+        resp = jsonify({"error": result["error"]})
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
+
+
 @app.route("/reset", methods=["POST"])
 def reset():
     session_id = "default"
@@ -553,7 +601,9 @@ def run_pipeline_async(session_id, brief):
         # Step 2: Landing page
         update("Creating landing page...", "→ Creating HubSpot form + landing page...")
         from modules.landing_page import create_hubspot_landing_page
-        landing = create_hubspot_landing_page(brief, zoom_url)
+        # Use the Flask server URL as webhook so landing pages can trigger confirmation emails
+        webhook_base = os.environ.get("WEBHOOK_BASE_URL", "http://localhost:5001")
+        landing = create_hubspot_landing_page(brief, zoom_url, webhook_url=webhook_base)
 
         landing_url = ""
         if landing:

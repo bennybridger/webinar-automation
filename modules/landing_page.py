@@ -12,7 +12,9 @@ Flow:
 import sys
 import os
 import json
+import re
 from datetime import datetime
+from urllib.parse import quote
 
 import requests
 
@@ -24,6 +26,95 @@ HEADERS = {
     "Authorization": f"Bearer {HUBSPOT_ACCESS_TOKEN}",
     "Content-Type": "application/json",
 }
+
+
+def _build_gcal_link(webinar_info):
+    """
+    Build a Google Calendar 'Add to Calendar' URL from webinar info.
+    No API call needed — just a URL that opens Google Calendar with pre-filled fields.
+    """
+    title = webinar_info.get("title", "Webinar")
+    description = webinar_info.get("description", "")
+    date_str = webinar_info.get("date", "")  # "2026-04-15"
+    time_str = webinar_info.get("time", "")  # "1:00 PM ET"
+    duration = webinar_info.get("duration_minutes", 45)
+
+    # Parse date + time into start datetime
+    # Strip timezone abbreviation for parsing (e.g., "1:00 PM ET" → "1:00 PM")
+    clean_time = re.sub(r'\s*(ET|EST|EDT|CT|CST|CDT|PT|PST|PDT|MT|MST|MDT)\s*$', '', time_str, flags=re.IGNORECASE).strip()
+
+    try:
+        start_dt = datetime.strptime(f"{date_str} {clean_time}", "%Y-%m-%d %I:%M %p")
+    except ValueError:
+        try:
+            start_dt = datetime.strptime(f"{date_str} {clean_time}", "%Y-%m-%d %H:%M")
+        except ValueError:
+            # Fallback: just use date at noon
+            start_dt = datetime.strptime(date_str, "%Y-%m-%d").replace(hour=12)
+
+    from datetime import timedelta
+    end_dt = start_dt + timedelta(minutes=duration)
+
+    # Google Calendar URL format: YYYYMMDDTHHMMSS
+    fmt = "%Y%m%dT%H%M%S"
+    dates = f"{start_dt.strftime(fmt)}/{end_dt.strftime(fmt)}"
+
+    params = {
+        "action": "TEMPLATE",
+        "text": title,
+        "dates": dates,
+        "details": description,
+    }
+
+    query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
+    return f"https://calendar.google.com/calendar/render?{query}"
+
+
+def send_confirmation_email(to_email, to_name, webinar_info):
+    """
+    Send a registration confirmation email with calendar invite link.
+    Called when someone submits the landing page registration form.
+
+    Returns:
+        dict with success, message_id, error
+    """
+    from modules.email_sender import send_email
+    from jinja2 import Environment, FileSystemLoader
+
+    templates_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+    jinja_env = Environment(loader=FileSystemLoader(templates_dir))
+    template = jinja_env.get_template("confirmation.html")
+
+    # Build Google Calendar link
+    gcal_link = _build_gcal_link(webinar_info)
+
+    # Format date nicely
+    raw_date = webinar_info.get("date", "")
+    try:
+        nice_date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%B %d, %Y")
+    except (ValueError, TypeError):
+        nice_date = raw_date
+
+    html = template.render(
+        first_name=to_name.split()[0] if to_name else "there",
+        webinar_title=webinar_info.get("title", "Webinar"),
+        webinar_date=nice_date,
+        webinar_time=webinar_info.get("time", ""),
+        duration=webinar_info.get("duration_minutes", 45),
+        speaker=webinar_info.get("speaker", ""),
+        gcal_link=gcal_link,
+        sender_name=SENDER_NAME,
+    )
+
+    subject = f"You're registered: {webinar_info.get('title', 'Webinar')}"
+    result = send_email(to_email, to_name, subject, html)
+
+    if result["success"]:
+        print(f"  [CONFIRMATION] Sent to {to_name} <{to_email}>")
+    else:
+        print(f"  [CONFIRMATION FAILED] {to_email}: {result['error']}")
+
+    return result
 
 
 def _get_portal_id():
@@ -124,7 +215,7 @@ def _create_hubspot_form(webinar_info, zoom_join_url=""):
         return None
 
 
-def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
+def _generate_landing_page_html(webinar_info, form_data, zoom_join_url="", webhook_url=""):
     """Generate a beautiful, mobile-responsive HTML landing page."""
 
     title = webinar_info["title"]
@@ -166,6 +257,25 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
             target: "#hubspot-form",
             css: "",
             cssClass: "hs-custom-form",
+            onFormSubmit: function($form) {{
+              // Capture form values before HubSpot clears them
+              var email = $form.find('input[name="email"]').val() || '';
+              var firstName = $form.find('input[name="firstname"]').val() || '';
+              var lastName = $form.find('input[name="lastname"]').val() || '';
+              // POST to our webhook to trigger confirmation email
+              var webhookUrl = "{webhook_url}";
+              if (webhookUrl) {{
+                fetch(webhookUrl + '/webhook/registration', {{
+                  method: 'POST',
+                  headers: {{'Content-Type': 'application/json'}},
+                  body: JSON.stringify({{
+                    email: email,
+                    first_name: firstName,
+                    last_name: lastName
+                  }})
+                }}).catch(function() {{}});
+              }}
+            }},
             onFormSubmitted: function() {{
               document.getElementById('hubspot-form').style.display = 'none';
               document.getElementById('thank-you').style.display = 'block';
@@ -438,7 +548,7 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url=""):
 </html>"""
 
 
-def create_hubspot_landing_page(webinar_info, zoom_join_url=""):
+def create_hubspot_landing_page(webinar_info, zoom_join_url="", webhook_url=""):
     """
     Create a webinar registration landing page with HubSpot form integration.
 
@@ -448,7 +558,8 @@ def create_hubspot_landing_page(webinar_info, zoom_join_url=""):
 
     Args:
         webinar_info: dict with webinar brief details
-        zoom_join_url: the Zoom meeting link (redirect target after registration)
+        zoom_join_url: the Zoom meeting link
+        webhook_url: base URL for the confirmation email webhook (e.g. "http://localhost:5001")
 
     Returns:
         dict with landing_page_file, hubspot_form_id, etc. or None on failure
@@ -461,7 +572,7 @@ def create_hubspot_landing_page(webinar_info, zoom_join_url=""):
 
     # Step 2: Generate landing page HTML
     print("\n  Generating landing page...")
-    html = _generate_landing_page_html(webinar_info, form_data, zoom_join_url)
+    html = _generate_landing_page_html(webinar_info, form_data, zoom_join_url, webhook_url=webhook_url)
 
     # Step 3: Save to output directory
     output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")

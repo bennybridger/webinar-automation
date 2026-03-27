@@ -256,10 +256,29 @@
           hbspt.forms.create({
             region: "na2",
             portalId: "245132577",
-            formId: "1c46102a-db45-4637-8845-1caf3d07a68c",
+            formId: "a29a0159-3db8-4278-a3b7-71d3f1610574",
             target: "#hubspot-form",
             css: "",
             cssClass: "hs-custom-form",
+            onFormSubmit: function($form) {
+              // Capture form values before HubSpot clears them
+              var email = $form.find('input[name="email"]').val() || '';
+              var firstName = $form.find('input[name="firstname"]').val() || '';
+              var lastName = $form.find('input[name="lastname"]').val() || '';
+              // POST to our webhook to trigger confirmation email
+              var webhookUrl = "http://localhost:5001";
+              if (webhookUrl) {
+                fetch(webhookUrl + '/webhook/registration', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({
+                    email: email,
+                    first_name: firstName,
+                    last_name: lastName
+                  })
+                }).catch(function() {});
+              }
+            },
             onFormSubmitted: function() {
               document.getElementById('hubspot-form').style.display = 'none';
               document.getElementById('thank-you').style.display = 'block';
