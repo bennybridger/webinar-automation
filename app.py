@@ -690,7 +690,6 @@ def run_pipeline_async(session_id, brief):
         # Step 6: Schedule follow-ups
         update("Scheduling follow-ups...", "→ Scheduling follow-up emails...")
         from modules.follow_up import schedule_reminder, schedule_followup
-        import os
 
         # Save brief to temp file for follow-ups
         brief_path = os.path.join(os.path.dirname(__file__), "output", "last_brief.json")
