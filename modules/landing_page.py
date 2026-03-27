@@ -66,7 +66,7 @@ def _build_gcal_link(webinar_info):
         "details": description,
     }
 
-    query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
+    query = "&".join(f"{k}={quote(str(v), safe='/')}" for k, v in params.items())
     return f"https://calendar.google.com/calendar/render?{query}"
 
 
