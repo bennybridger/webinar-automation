@@ -269,13 +269,26 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url="", webho
             css: "",
             cssClass: "hs-custom-form",
             onFormSubmit: function($form) {{
-              // Capture form values before HubSpot clears them
-              var email = $form.find('input[name="email"]').val() || '';
-              var firstName = $form.find('input[name="firstname"]').val() || '';
-              var lastName = $form.find('input[name="lastname"]').val() || '';
-              // POST to our webhook to trigger confirmation email
+              var email, firstName, lastName;
+              try {{
+                if ($form && $form.find) {{
+                  email = $form.find('input[name="email"]').val() || '';
+                  firstName = $form.find('input[name="firstname"]').val() || '';
+                  lastName = $form.find('input[name="lastname"]').val() || '';
+                }} else {{
+                  var formEl = $form || document.querySelector('#hubspot-form form');
+                  email = (formEl.querySelector('input[name="email"]') || {{}}).value || '';
+                  firstName = (formEl.querySelector('input[name="firstname"]') || {{}}).value || '';
+                  lastName = (formEl.querySelector('input[name="lastname"]') || {{}}).value || '';
+                }}
+              }} catch(e) {{
+                var container = document.getElementById('hubspot-form');
+                email = (container.querySelector('input[name="email"]') || {{}}).value || '';
+                firstName = (container.querySelector('input[name="firstname"]') || {{}}).value || '';
+                lastName = (container.querySelector('input[name="lastname"]') || {{}}).value || '';
+              }}
               var webhookUrl = "{webhook_url}";
-              if (webhookUrl) {{
+              if (webhookUrl && email) {{
                 fetch(webhookUrl + '/webhook/registration', {{
                   method: 'POST',
                   headers: {{'Content-Type': 'application/json'}},
@@ -284,7 +297,8 @@ def _generate_landing_page_html(webinar_info, form_data, zoom_join_url="", webho
                     first_name: firstName,
                     last_name: lastName
                   }})
-                }}).catch(function() {{}});
+                }}).then(function(r) {{ console.log('Webhook response:', r.status); }})
+                  .catch(function(e) {{ console.error('Webhook error:', e); }});
               }}
             }},
             onFormSubmitted: function() {{
