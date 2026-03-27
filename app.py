@@ -661,7 +661,7 @@ def run_pipeline_async(session_id, brief):
         update("Creating landing page...", "→ Creating HubSpot form + landing page...")
         from modules.landing_page import create_hubspot_landing_page
         # Use the Flask server URL as webhook so landing pages can trigger confirmation emails
-        webhook_base = os.environ.get("WEBHOOK_BASE_URL", "http://localhost:5001")
+        webhook_base = os.environ.get("WEBHOOK_BASE_URL", "https://webinar-webhook-production.up.railway.app")
         landing = create_hubspot_landing_page(brief, zoom_url, webhook_url=webhook_base)
 
         landing_url = ""

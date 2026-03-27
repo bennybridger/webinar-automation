@@ -266,7 +266,7 @@
               var firstName = $form.find('input[name="firstname"]').val() || '';
               var lastName = $form.find('input[name="lastname"]').val() || '';
               // POST to our webhook to trigger confirmation email
-              var webhookUrl = "http://localhost:5001";
+              var webhookUrl = "https://webinar-webhook-production.up.railway.app";
               if (webhookUrl) {
                 fetch(webhookUrl + '/webhook/registration', {
                   method: 'POST',
