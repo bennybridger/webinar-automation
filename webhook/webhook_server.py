@@ -156,8 +156,84 @@ def send_confirmation_email(to_email, to_name, webinar_info):
 # --- Routes ---
 
 @app.route("/")
+def home():
+    """Portfolio-ready landing page for the webhook service."""
+    brief = load_brief()
+    brief_loaded = brief is not None
+    webinar_title = brief.get("title", "—") if brief else "—"
+    landing_url = brief.get("landing_page_url", "") if brief else ""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webinar Webhook API</title>
+  <style>
+    * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f7; color: #1a1a2e; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }}
+    .card {{ background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 600px; width: 100%; overflow: hidden; }}
+    .header {{ background: linear-gradient(135deg, #6c63ff 0%, #4834d4 100%); padding: 40px 32px; text-align: center; }}
+    .header h1 {{ color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 8px; }}
+    .header p {{ color: rgba(255,255,255,0.85); font-size: 14px; }}
+    .badge {{ display: inline-block; background: rgba(255,255,255,0.2); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; padding: 4px 12px; border-radius: 12px; margin-bottom: 16px; }}
+    .body {{ padding: 32px; }}
+    .status {{ display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 12px 16px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; }}
+    .dot {{ width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }}
+    .status span {{ font-size: 14px; color: #166534; font-weight: 500; }}
+    .info {{ margin-bottom: 24px; }}
+    .info p {{ font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 12px; }}
+    .info strong {{ color: #1a1a2e; }}
+    .section-label {{ font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }}
+    .detail {{ font-size: 14px; color: #334155; margin-bottom: 16px; }}
+    .links {{ display: flex; flex-direction: column; gap: 8px; }}
+    .links a {{ display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-decoration: none; color: #6c63ff; font-size: 14px; font-weight: 500; transition: all 0.15s; }}
+    .links a:hover {{ background: #f0edff; border-color: #6c63ff; }}
+    .links .arrow {{ margin-left: auto; color: #94a3b8; }}
+    .footer {{ text-align: center; padding: 16px 32px 24px; }}
+    .footer p {{ font-size: 12px; color: #94a3b8; }}
+    .endpoint {{ font-family: 'SF Mono', Monaco, Consolas, monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="badge">API Service</div>
+      <h1>Webinar Launch Automation Engine</h1>
+      <p>Registration webhook powering confirmation emails</p>
+    </div>
+    <div class="body">
+      <div class="status">
+        <div class="dot"></div>
+        <span>Service running &mdash; brief {"loaded" if brief_loaded else "not loaded"}</span>
+      </div>
+
+      <div class="info">
+        <p>This API receives registration form submissions from hosted landing pages and sends confirmation emails with Zoom links and calendar invites via Brevo.</p>
+        <div class="section-label">Current Webinar</div>
+        <div class="detail">{webinar_title}</div>
+        <div class="section-label">Endpoint</div>
+        <div class="detail"><span class="endpoint">POST /webhook/registration</span></div>
+      </div>
+
+      <div class="section-label">Links</div>
+      <div class="links">
+        {"<a href='" + landing_url + "'>Try it &mdash; register on the live landing page<span class='arrow'>&rarr;</span></a>" if landing_url else ""}
+        <a href="https://github.com/bennybridger/webinar-automation">GitHub repo + full README<span class="arrow">&rarr;</span></a>
+        <a href="https://github.com/bennybridger/webinar-automation/blob/main/README.md">Architecture &amp; API documentation<span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Built by Benny Bridger &middot; Python + Flask + Brevo + HubSpot + Zoom + Google Calendar</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+
+@app.route("/health")
 def health():
-    """Health check for Render."""
+    """JSON health check for programmatic use."""
     return jsonify({"status": "ok", "service": "webinar-webhook"})
 
 
